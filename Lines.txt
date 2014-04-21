@@ -1,0 +1,86 @@
+    @endpoints.method(UserIDAndArticles, ArticleList,
+                      name='user.update',
+                      path='update',
+                      http_method='GET')
+    def get_update(self, request):
+        userID = request.id
+        #articleList = request.items
+
+        #listings = ndb.GqlQuery("SELECT __key__ FROM UsersList WHERE UserID = :1", userID, key="ArticlesRead")
+
+        return request
+
+    @endpoints.method(UserID, ArticleList,
+                      name='user.newUser',
+                      path='new_user',
+                      http_method='GET')
+    def new_user(self, request):
+        userID = request.id
+        return request
+        #listings = ndb.GqlQuery("SELECT * FROM UsersList WHERE UserID = :1", userID)
+
+        #if(listings.size == 0):
+        #    return True
+        #else:
+        #    return False
+
+        #counter = 0
+
+        #for thing in listings:
+        #    counter += 1
+
+        #if(counter == 0):
+        #    e = UsersList(UserID = int(TheUserID),
+        #                  Articles = [TheArticles])
+        #    e.put()
+        #else:
+        #    return []
+
+
+def insertToDB():
+        list1 = ["this", "is", "test", "1"]
+        list2 = ["this", "is", "test", "2"]
+        list3 = ["this", "is", "test", "3"]
+        list4 = ["this", "is", "test", "4"]
+        list5 = ["this", "is", "test", "5"]
+        list6 = ["this", "is", "test", "6"]
+        list7 = ["this", "is", "test", "7"]
+        list8 = ["this", "is", "test", "8"]
+        UsersList(UserID='Betty1', ArticlesRead=json.dumps(list1), ArticlesPush=json.dumps(list2)).put()
+        UsersList(UserID='Betty2', ArticlesRead=json.dumps(list3), ArticlesPush=json.dumps(list4)).put()
+        UsersList(UserID='Betty3', ArticlesRead=json.dumps(list5), ArticlesPush=json.dumps(list6)).put()
+        UsersList(UserID='Betty4', ArticlesRead=json.dumps(list7), ArticlesPush=json.dumps(list8)).put()
+
+        userID = request.id
+        articleList = request.items
+        queryResult = UsersList.query(UsersList.UserID == userID)
+
+        currentList = []
+        for thing in queryResult:
+            currentList = json.loads(thing.ArticlesRead)
+
+        for thing in articleList:
+            currentList.append(thing)
+
+        for blah in queryResult:
+            blah.ArticlesRead = json.dumps(currentList)
+            blah.put()
+
+        #put command to update push list here...
+
+        #query2 = UsersList.query(UsersList.UserID == userID) [this is in case that the OG query doesn't update]
+
+        for thisThing in queryResult:
+            pushList = json.loads(thisThing.ArticlesPush)
+
+        return ArticleList(items = pushList)
+
+getList
+
+        userID = request.id
+        articleList = UsersList.query(UsersList.UserID == userID)
+
+        for thing in articleList:
+            return ArticleList(items = json.loads(thing.ArticlesPush))
+
+        return ArticleList(items = [])
