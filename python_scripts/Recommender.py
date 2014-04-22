@@ -84,6 +84,17 @@ def append_new_user(new_user, user_dict):
     compare_all_users(new_user, user_list, user_dict)
 
 
+def run_user_update(target_user, user_dict, article_list):
+    """
+    article_list is a list like [ {'id': int, 'rating':int}, {}, {}, {} ]
+    """
+    for article in article_list:
+        target_user.read_articles(article['id'], article['rating'])
+    compare_all_users(target_user, user_dict.keys(), user_dict)
+    return get_new_articles(target_user, user_dict)
+
+
+
 
 def test():  # my shitty testing function
     # Testing compare_articles

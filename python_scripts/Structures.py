@@ -15,9 +15,9 @@ class User():
 
 
 
-    def read_article(self, article, rating):
-        art = User_Article(article.article_id, rating)
-        self.unread_articles.remove(article)
+    def read_article(self, id, rating):
+        art = User_Article(id, rating)
+        self.unread_articles.remove(art)
         self.read_articles.add(art)
 
     def add_interest(self, keyword):
