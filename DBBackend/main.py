@@ -11,6 +11,10 @@
 # Change JSONProperty to Structured Property
 
 import endpoints
+import sys
+sys.path.append("C:\Users\Student\PycharmProjects\DBBackend\python_scripts")
+import Recommender
+import Structures
 from protorpc import messages
 from protorpc import remote
 import json
