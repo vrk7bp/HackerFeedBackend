@@ -34,7 +34,7 @@ class UserID(messages.Message):
 
 class Articles(messages.Message):
     id = messages.StringField(1, required=True)
-    userLiked = messages.BooleanField(2, required=True)
+    userLiked = messages.FloatField(2, required=True)
 
 
 class UserIDAndArticles(messages.Message):
@@ -47,16 +47,16 @@ class ArticleList(messages.Message):
 
 #Just a test method so that I could test the dataStore retrieval
 def insertToDB2():
-        list1 = [collections.OrderedDict({'id': '1', 'userLiked': True}), collections.OrderedDict({'id': '2', 'userLiked': True})]
-        list2 = [collections.OrderedDict({'id': '3', 'userLiked': True}), collections.OrderedDict({'id': '4', 'userLiked': True})]
-        list3 = [collections.OrderedDict({'id': '5', 'userLiked': True}), collections.OrderedDict({'id': '6', 'userLiked': True})]
-        list4 = [collections.OrderedDict({'id': '7', 'userLiked': True}), collections.OrderedDict({'id': '8', 'userLiked': True})]
+        list1 = [collections.OrderedDict({'id': '1', 'userLiked': .1}), collections.OrderedDict({'id': '2', 'userLiked': .1})]
+        list2 = [collections.OrderedDict({'id': '3', 'userLiked': .2}), collections.OrderedDict({'id': '4', 'userLiked': .2})]
+        list3 = [collections.OrderedDict({'id': '5', 'userLiked': .3}), collections.OrderedDict({'id': '6', 'userLiked': .3})]
+        list4 = [collections.OrderedDict({'id': '7', 'userLiked': .4}), collections.OrderedDict({'id': '8', 'userLiked': .4})]
         UsersList(UserID='One', ArticlesRead=json.dumps(list1), ArticlesPush=json.dumps(list2)).put()
         UsersList(UserID='Two', ArticlesRead=json.dumps(list3), ArticlesPush=json.dumps(list4)).put()
 
 #Have to create a method here that retrieves from the API the top 200 articles in default order
 def defaultList():
-    list1 = [collections.OrderedDict({'id': '11', 'userLiked': False}), collections.OrderedDict({'id': '12', 'userLiked': True})]
+    list1 = [collections.OrderedDict({'id': '11', 'userLiked': .5}), collections.OrderedDict({'id': '12', 'userLiked': .6})]
     return list1
 
 
