@@ -71,7 +71,7 @@ class User_Article():
 class Article():
     """Models an Article - is a more complete structure """
 
-    def __init__(self, id, url, keywords):
+    def __init__(self, id, url, keywords, title):
         """
         id = article
         Url = path to the article
@@ -80,6 +80,8 @@ class Article():
         self.id = id
         self.url = url
         self. keywords = keywords
+        self.title = title
+        # Add stuff here, like score, comments, ect ..
 
     def __eq__(self, other):
         """
