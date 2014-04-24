@@ -17,8 +17,6 @@ import Recommender
 import Structures
 from protorpc import messages
 from protorpc import remote
-import json
-import collections
 from google.appengine.ext import ndb
 
 
@@ -28,6 +26,16 @@ class ArticleRead(ndb.Model):
 
 
 class ArticleList(ndb.Model):
+    id = ndb.StringProperty(required=True) #Just the Article ID
+
+
+class UsersList(ndb.Model):
+    UserID = ndb.StringProperty(required=True)
+    ArticlesToRead = ndb.StructuredProperty(ArticleRead, repeated=True)
+    ArticlesToPush = ndb.StructuredProperty(ArticleList, repeated=True)
+
+
+class ArticleDatabase(ndb.Model):
     id = ndb.StringProperty(required=True) #Article ID
     title = ndb.StringProperty(required=True) #Title
     points = ndb.IntegerProperty(required=True) #Points of the story
@@ -40,12 +48,6 @@ class ArticleList(ndb.Model):
     time = ndb.StringProperty(required=True) #As in like 10 hours
     num_comments = ndb.IntegerProperty(required=True) #Number of comments
     rank = ndb.IntegerProperty(required=True) #Ranking
-
-
-class UsersList(ndb.Model):
-    UserID = ndb.StringProperty(required=True)
-    ArticlesToRead = ndb.StructuredProperty(ArticleRead, repeated=True)
-    ArticlesToPush = ndb.StructuredProperty(ArticleList, repeated=True)
 
 
 class UserID(messages.Message):
@@ -81,24 +83,45 @@ class ArticleListOut(messages.Message):
     items = messages.MessageField(ArticlesPush, 1, repeated=True)
 
 
-class ArticleReadList(messages.Message):
-    items = messages.MessageField(Articles, 1, repeated=True)
+def getArticleInformation(articleIDList):
+    returnList = []
+    for element in articleIDList:
+        articleInfo = ArticleDatabase.query(ArticleDatabase.id == element.id).get()
+        tempArticle = ArticlesPush()
+        tempArticle.id = articleInfo.id
+        tempArticle.title = articleInfo.title
+        tempArticle.points = articleInfo.points
+        tempArticle.comments = articleInfo.comments
+        tempArticle.submitter = articleInfo.submitter
+        tempArticle.url = articleInfo.url
+        tempArticle.self_post = articleInfo.self_post
+        tempArticle.domain = articleInfo.domain
+        tempArticle.profile = articleInfo.profile
+        tempArticle.time = articleInfo.time
+        tempArticle.num_comments = articleInfo.num_comments
+        tempArticle.rank = articleInfo.rank
+        returnList.append(tempArticle)
+    return returnList
+
 
 #Just a test method so that I could test the dataStore retrieval
 def insertToDB2():
         list1 = [ArticleRead(id = '1', userLiked = .1), ArticleRead(id = '2', userLiked = .1)]
-        list2 = [ArticleList(id= '3', title= "hi3", points= 3, comments= "comm3", submitter= "sub3", url= "url3", self_post= False, domain= "domain3", profile= "prof3", time= "time3", num_comments= 3, rank= 3), \
-                 ArticleList(id= '4', title= "hi4", points= 4, comments= "comm4", submitter= "sub4", url= "url4", self_post= True, domain= "domain4", profile= "prof4", time= "time4", num_comments= 4, rank= 4)]
+        list2 = [ArticleList(id= '3'), ArticleList(id= '4')]
         list3 = [ArticleRead(id = '1', userLiked = .1), ArticleRead(id= '2', userLiked= .1)]
-        list4 = [ArticleList(id= '5', title= "hi5", points= 5, comments= "comm5", submitter= "sub5", url= "url5", self_post= False, domain= "domain5", profile= "prof5", time= "time5", num_comments= 5, rank= 5), \
-                 ArticleList(id= '6', title= "hi6", points= 6, comments= "comm6", submitter= "sub6", url= "url6", self_post= True, domain= "domain6", profile= "prof6", time= "time6", num_comments= 6, rank= 6)]
+        list4 = [ArticleList(id= '5'), ArticleList(id= '6')]
         UsersList(UserID='Three', ArticlesToRead=list1, ArticlesToPush=list2).put()
         UsersList(UserID='Five', ArticlesToRead=list3, ArticlesToPush=list4).put()
+        ArticleDatabase(id= '3', title= "hi3", points= 3, comments= "comm3", submitter= "sub3", url= "url3", self_post= False, domain= "domain3", profile= "prof3", time= "time3", num_comments= 3, rank= 3).put()
+        ArticleDatabase(id= '4', title= "hi4", points= 4, comments= "comm4", submitter= "sub4", url= "url4", self_post= True, domain= "domain4", profile= "prof4", time= "time4", num_comments= 4, rank= 4).put()
+        ArticleDatabase(id= '5', title= "hi5", points= 5, comments= "comm5", submitter= "sub5", url= "url5", self_post= False, domain= "domain5", profile= "prof5", time= "time5", num_comments= 5, rank= 5).put()
+        ArticleDatabase(id= '6', title= "hi6", points= 6, comments= "comm6", submitter= "sub6", url= "url6", self_post= True, domain= "domain6", profile= "prof6", time= "time6", num_comments= 6, rank= 6).put()
+        ArticleDatabase(id= '1', title= "hi1", points= 1, comments= "comm1", submitter= "sub1", url= "url1", self_post= True, domain= "domain1", profile= "prof1", time= "time1", num_comments= 1, rank= 1).put()
+        ArticleDatabase(id= '2', title= "hi2", points= 2, comments= "comm2", submitter= "sub2", url= "url2", self_post= False, domain= "domain2", profile= "prof2", time= "time2", num_comments= 2, rank= 2).put()
 
 #Have to create a method here that retrieves from the API the top 200 articles in default order
 def defaultList():
-    list1 = [ArticleList(id= '1', title= "hi1", points= 1, comments= "comm1", submitter= "sub1", url= "url1", self_post= True, domain= "domain1", profile= "prof1", time= "time1", num_comments= 1, rank= 1), \
-             ArticleList(id= '2', title= "hi2", points= 2, comments= "comm2", submitter= "sub2", url= "url2", self_post= False, domain= "domain2", profile= "prof2", time= "time2", num_comments= 2, rank= 2)]
+    list1 = [ArticleList(id= '1'), ArticleList(id= '2')]
     return list1
 
 
@@ -118,26 +141,11 @@ class HackerFeedApi(remote.Service):
 
         articlesToPush = userlist.ArticlesToPush
 
-        returnList = []
-        for element in articlesToPush:
-            tempArticle = ArticlesPush()
-            tempArticle.id = element.id
-            tempArticle.title = element.title
-            tempArticle.points = element.points
-            tempArticle.comments = element.comments
-            tempArticle.submitter = element.submitter
-            tempArticle.url = element.url
-            tempArticle.self_post = element.self_post
-            tempArticle.domain = element.domain
-            tempArticle.profile = element.profile
-            tempArticle.time = element.time
-            tempArticle.num_comments = element.num_comments
-            tempArticle.rank = element.rank
-            returnList.append(tempArticle)
+        returnList = getArticleInformation(articlesToPush)
 
         return ArticleListOut(items = returnList)
 
-    @endpoints.method(UserID, ArticleReadList,
+    @endpoints.method(UserID, ArticleListOut,
                       name='user.articleRead',
                       path='articlesRead',
                       http_method='GET')
@@ -149,14 +157,9 @@ class HackerFeedApi(remote.Service):
 
         articlesToRead = userlist.ArticlesToRead
 
-        returnList = []
-        for element in articlesToRead:
-            tempArticle = Articles()
-            tempArticle.id = element.id
-            tempArticle.userLiked = element.userLiked
-            returnList.append(tempArticle)
+        returnList = getArticleInformation(articlesToRead)
 
-        return ArticleReadList(items = returnList)
+        return ArticleListOut(items = returnList)
 
     @endpoints.method(UserID, ArticleListOut,
                       name='user.newUser',
@@ -169,22 +172,7 @@ class HackerFeedApi(remote.Service):
                       ArticlesToPush= articleList)
         e.put()
 
-        returnList = []
-        for element in articleList:
-            tempArticle = ArticlesPush()
-            tempArticle.id = element.id
-            tempArticle.title = element.title
-            tempArticle.points = element.points
-            tempArticle.comments = element.comments
-            tempArticle.submitter = element.submitter
-            tempArticle.url = element.url
-            tempArticle.self_post = element.self_post
-            tempArticle.domain = element.domain
-            tempArticle.profile = element.profile
-            tempArticle.time = element.time
-            tempArticle.num_comments = element.num_comments
-            tempArticle.rank = element.rank
-            returnList.append(tempArticle)
+        returnList = getArticleInformation(articleList)
 
         return ArticleListOut(items = returnList)
 
@@ -214,22 +202,7 @@ class HackerFeedApi(remote.Service):
 
         articlesToPush = userlist.ArticlesToPush
 
-        returnList = []
-        for element in articlesToPush:
-            tempArticle = ArticlesPush()
-            tempArticle.id = element.id
-            tempArticle.title = element.title
-            tempArticle.points = element.points
-            tempArticle.comments = element.comments
-            tempArticle.submitter = element.submitter
-            tempArticle.url = element.url
-            tempArticle.self_post = element.self_post
-            tempArticle.domain = element.domain
-            tempArticle.profile = element.profile
-            tempArticle.time = element.time
-            tempArticle.num_comments = element.num_comments
-            tempArticle.rank = element.rank
-            returnList.append(tempArticle)
+        returnList = getArticleInformation(articlesToPush)
 
         return ArticleListOut(items= returnList)
 
