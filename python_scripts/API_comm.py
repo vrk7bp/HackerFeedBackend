@@ -42,6 +42,7 @@ def get_new_articles(n):
 def get_best_articles(n):
     """
     Retrieves n best articles
+    returns a list of dictionaries, dicts represent article
     """
     hn = HN()
     type = 'best'
@@ -80,7 +81,6 @@ def main():
                 list = get_new_articles(n)
                 for story in list:
                     print story
-
 
 
 if __name__ == "__main__":

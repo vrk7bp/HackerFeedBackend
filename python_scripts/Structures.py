@@ -67,6 +67,12 @@ class User_Article():
         else:
             return False
 
+    def __str__(self):
+        return str((self.id, self.rating))
+
+    def __repr__(self):
+        return str(self)
+
 
 class Article():
     """Models an Article - is a more complete structure """
