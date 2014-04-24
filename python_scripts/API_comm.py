@@ -3,16 +3,12 @@ import os
 from hn import HN, Story  # Maybe use th
 
 
-
-base_url = 'https://hn.algolia.com/api/v1/'  # base url for the API we are using
-hn = HN()
-
-
 def get_top_articles(n):
     """
     Retrieves top n articles using hacker news API
     returns a list of dictionaries, dicts represent article
     """
+    hn = HN()
     type = ''
     stories = hn.get_stories(story_type=type, limit=n)
     article_list = []
@@ -22,7 +18,7 @@ def get_top_articles(n):
                         'self': article.is_self, 'domain': article.domain, 'profile': article.submitter_profile,
                         'time': article.published_time, 'num_comments': article.num_comments, 'rank': article.rank}
         article_list.append(article_dict)
-    return stories  # this is a list of story objects
+    return article_list  # this is a list of story objects
 
 
 def get_new_articles(n):
@@ -30,6 +26,7 @@ def get_new_articles(n):
     Retrieves n newest articles
     returns a list of dictionaries, dicts represent article
     """
+    hn = HN()
     type = 'newest'
     stories = hn.get_stories(story_type=type, limit=n)
     article_list = []
@@ -46,6 +43,7 @@ def get_best_articles(n):
     """
     Retrieves n best articles
     """
+    hn = HN()
     type = 'best'
     stories = hn.get_stories(story_type=type, limit=n)
     article_list = []
@@ -60,7 +58,7 @@ def get_best_articles(n):
 
 def main():
     while(True):
-        mode = raw_input('Enter input mode (t,n,b) (q to quit): ')
+        mode = raw_input('Enter input mode (t,n,b,l) (q to quit): ')
         if mode == 'q':
             break
         else:
