@@ -1,6 +1,7 @@
 from __future__ import division  # makes integer division not round
 # to do 'normal' integer division, do int1//int2
 from Structures import User_Article
+import copy
 
 
 def same_sign(a, b):
@@ -69,13 +70,16 @@ def get_new_articles(target_user, user_dict):
     article_set = set()
     for user_tup in user_list:
         closeness = user_tup[1]
-        articles = user_tup[0].read_articles
+        articles = copy.deepcopy(user_tup[0].read_articles)
         if closeness > 0:  # if their tastes are similar enough
+            for art in articles:
+                art.rating = closeness
             article_set.union(articles)
     # Get new, unread articles into the target_user's queue
     target_user.unread_articles = target_user.unread_articles | article_set
     target_user.unread_articles = target_user.unread_articles - target_user.read_articles
-    return target_user.unread_articles
+    # best matches are at the front of the list
+    return sorted(target_user.unread_articles, reverse=True, key= lambda article : article.rating)
 
 
 def append_new_user(new_user, user_dict):
@@ -97,24 +101,19 @@ def run_user_update(target_user, user_dict, article_list):
 
 
 def test():  # my shitty testing function
-    # Testing compare_articles
-    tup1 = User_Article('art_1', .5)
-    tup2 = User_Article('art_1', .6)
-    tup3 = User_Article('art_1', 1)
-    tup4 = User_Article('art_1', -1)
-    tup5 = User_Article('art_1', -.5)
-    # print compare_articles(tup1, tup1)
-    # print compare_articles(tup5, tup5)
-    # print compare_articles(tup1, tup2)
-    # print compare_articles(tup3, tup4)
-    # print compare_articles(tup4, tup5)
-    # print compare_articles(tup5, tup1)
+    art_list = [
+        User_Article('101', -.7),
+        User_Article('1', .5),
+        User_Article('99', 1),
+        User_Article('55', -1),
+        User_Article('61', -.3)
+    ]
+    print art_list
+    print sorted(art_list)
+    print sorted(art_list, reverse=True)
+    print sorted(art_list, key=lambda article : article.rating)
+    print sorted(art_list, reverse=True, key=lambda article : article.rating)
 
-    s1 = set([1, 2, 3, 4])
-    s2 = set([1, 2, 4, 5])
-
-    s1 = s1.union(s2)
-    print s1
 
 if __name__ == '__main__':
     test()
