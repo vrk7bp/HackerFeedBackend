@@ -11,7 +11,7 @@ def get_top_articles(n):
     stories = hn.get_stories(story_type=type, limit=n)
     article_list = []
     for article in stories:
-        article_dict = {'id': article.story_id, 'title': article.title, 'points': article.points,
+        article_dict = {'id': str(article.story_id), 'title': article.title, 'points': article.points,
                         'comments': article.comments_link, 'submitter': article.submitter, 'url': article.link,
                         'self': article.is_self, 'domain': article.domain, 'profile': article.submitter_profile,
                         'time': article.published_time, 'num_comments': article.num_comments, 'rank': article.rank}

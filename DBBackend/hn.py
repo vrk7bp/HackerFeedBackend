@@ -47,7 +47,7 @@ class HN(object):
         # points, submitter, comments
         detail = [row for (i, row) in enumerate(rows) if (i % 2 != 0)]
 
-        return zip(info, detail) # build a list of tuple for all post
+        return zip(info, detail)  # build a list of tuple for all post
 
     def _build_story(self, all_rows):
         """
@@ -66,8 +66,11 @@ class HN(object):
 
             is_self = False # by default all stories are linking posts
 
-            if link.find(BASE_URL) is -1 : # the link doesn't contains "http" meaning an internal link
-                domain = info_cells[2].find('span').string[2:-2] # slice " (abc.com) "
+            if link.find(BASE_URL) is -1 :  # the link doesn't contains "http" meaning an internal link
+                try:
+                    domain = info_cells[2].find('span').string[2:-2]  # slice " (abc.com) "
+                except AttributeError:
+                    continue
             else:
                 link = '%s/%s' % (BASE_URL, link)
                 domain = BASE_URL
@@ -137,7 +140,7 @@ class HN(object):
         self.more = story_type
         # while we still have more stories to find
         while stories_found < limit:
-            soup = get_soup(page=self.more) # get current page soup
+            soup = get_soup(page=self.more)  # get current page soup
             all_rows = self._get_zipped_rows(soup)
             stories = self._build_story(all_rows) # get a list of stories on current page
             self.more = self._get_next_page(soup) # move to next page

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import sys
+sys.path.insert(0, 'libs')
 from google.appengine.api import urlfetch
 from bs4 import BeautifulSoup
 
@@ -9,7 +11,7 @@ def get_soup(page=''):
     """
     Returns a bs4 object of the page requested
     """
-    url = 'GET','%s/%s' % (BASE_URL, page)
+    url = '%s/%s' % (BASE_URL, page)
     result = urlfetch.fetch(url)
     if result.status_code == 200:
         content = result.content
