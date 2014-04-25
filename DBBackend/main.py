@@ -11,8 +11,7 @@
 # Change JSONProperty to Structured Property
 
 import endpoints
-import sys
-sys.path.append("C:\Users\Student\PycharmProjects\DBBackend\python_scripts")
+import API_comm
 import Recommender
 import Structures
 from protorpc import messages
@@ -81,6 +80,31 @@ class UserIDAndArticles(messages.Message):
 
 class ArticleListOut(messages.Message):
     items = messages.MessageField(ArticlesPush, 1, repeated=True)
+
+def populateArticleDB(value):
+    ArticleList = API_comm.get_top_articles(value)
+    for elements in ArticleList:
+        articleQuery = ArticleDatabase.query(ArticleDatabase.id == elements['id']).get()
+        if articleQuery is None:
+            e = ArticleDatabase(id = elements['id'],
+                                title= elements['title'],
+                                points= elements['points'],
+                                comments = elements['comments'],
+                                submitter = elements['submitter'],
+                                url = elements['url'],
+                                self_post = elements['self'],
+                                domain = elements['domain'],
+                                profile = elements['profile'],
+                                time = elements['time'],
+                                num_comments = elements['num_comments'],
+                                rank = elements['rank'])
+            e.put()
+        else:
+            articleQuery.time = elements['time'];
+            articleQuery.points = elements['points'];
+            articleQuery.num_comments = elements['num_comments'];
+            articleQuery.rank = elements['rank'];
+            articleQuery.put()
 
 
 def getArticleInformation(articleIDList):
@@ -207,3 +231,4 @@ class HackerFeedApi(remote.Service):
         return ArticleListOut(items= returnList)
 
 application = endpoints.api_server([HackerFeedApi])
+populateArticleDB(100)

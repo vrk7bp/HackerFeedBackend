@@ -1,6 +1,4 @@
-import requests
-import os
-from hn import HN, Story  # Maybe use th
+from hn import HN   # Maybe use th
 
 
 def get_top_articles(n):
