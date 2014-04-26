@@ -16,7 +16,10 @@ import Recommender
 import Structures
 from protorpc import messages
 from protorpc import remote
+from protorpc import message_types
 from google.appengine.ext import ndb
+from google.appengine.api import urlfetch
+from bs4 import BeautifulSoup
 
 
 class ArticleRead(ndb.Model):
@@ -66,6 +69,10 @@ class ArticlesPush(messages.Message):
     time = messages.StringField(10, required=True) #As in like 10 hours
     num_comments = messages.IntegerField(11, required=True) #Number of comments
     rank = messages.IntegerField(12, required=True) #Ranking
+
+
+class TestReturn(messages.Message):
+    field = messages.StringField(1, required=True)
 
 
 class Articles(messages.Message):
@@ -229,6 +236,16 @@ class HackerFeedApi(remote.Service):
         returnList = getArticleInformation(articlesToPush)
 
         return ArticleListOut(items= returnList)
+    @endpoints.method(message_types.VoidMessage, TestReturn,
+                      name='user.test',
+                      path='test',
+                      http_method='GET')
+    def test(self, request):
+        BASE_URL = 'https://news.ycombinator.com'
+        url = '%s/%s' % (BASE_URL, '')
+        result = urlfetch.fetch(url, deadline=45, method=urlfetch.HEAD)
+        #content = BeautifulSoup(result.content)
+        return TestReturn(field=result.content)
 
 application = endpoints.api_server([HackerFeedApi])
 populateArticleDB(100)
