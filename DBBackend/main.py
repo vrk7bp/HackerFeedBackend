@@ -15,9 +15,10 @@ import sys
 sys.path.append("C:\Users\Student\PycharmProjects\DBBackend\python_scripts")
 import Recommender
 import Structures
-from protorpc import messages
+from protorpc import messages, message_types
 from protorpc import remote
 from google.appengine.ext import ndb
+import json
 
 
 class ArticleRead(ndb.Model):
@@ -52,6 +53,14 @@ class ArticleDatabase(ndb.Model):
 
 class UserID(messages.Message):
     id = messages.StringField(1, required=True)
+
+
+class ArticlesForDB(messages.Message):
+    theJson = messages.StringField(1, required=True)
+
+
+class Success(messages.Message):
+    didItWork = messages.StringField(1, required=True)
 
 
 class ArticlesPush(messages.Message):
@@ -121,8 +130,54 @@ def insertToDB2():
 
 #Have to create a method here that retrieves from the API the top 200 articles in default order
 def defaultList():
-    list1 = [ArticleList(id= '1'), ArticleList(id= '2')]
+    list1 = [ArticleList(id= '7642434'), ArticleList(id= '7651820'), ArticleList(id= '7647990'), ArticleList(id= '7651049')]
     return list1
+
+
+def parse_articles():
+    listOfArticles = ArticleDatabase.query()
+    request = []
+    for articleInfo in listOfArticles:
+        tempArticle = ArticlesPush()
+        tempArticle.id = articleInfo.id
+        tempArticle.title = articleInfo.title
+        tempArticle.points = articleInfo.points
+        tempArticle.comments = articleInfo.comments
+        tempArticle.submitter = articleInfo.submitter
+        tempArticle.url = articleInfo.url
+        tempArticle.self_post = articleInfo.self_post
+        tempArticle.domain = articleInfo.domain
+        tempArticle.profile = articleInfo.profile
+        tempArticle.time = articleInfo.time
+        tempArticle.num_comments = articleInfo.num_comments
+        tempArticle.rank = articleInfo.rank
+        request.append(tempArticle)
+    return request
+
+def populateArticleDB(list):
+    ArticleList = list
+    for elements in ArticleList:
+        articleQuery = ArticleDatabase.query(ArticleDatabase.id == elements['id']).get()
+        if articleQuery is None:
+            e = ArticleDatabase(id = elements['id'],
+                                title= elements['title'],
+                                points= elements['points'],
+                                comments = elements['comments'],
+                                submitter = elements['submitter'],
+                                url = elements['url'],
+                                self_post = elements['self'],
+                                domain = elements['domain'],
+                                profile = elements['profile'],
+                                time = elements['time'],
+                                num_comments = elements['num_comments'],
+                                rank = elements['rank'])
+            e.put()
+        else:
+            articleQuery.time = elements['time'];
+            articleQuery.points = elements['points'];
+            articleQuery.num_comments = elements['num_comments'];
+            articleQuery.rank = elements['rank'];
+            articleQuery.put()
 
 
 @endpoints.api(name='hackerFeed', version='v1',
@@ -176,6 +231,13 @@ class HackerFeedApi(remote.Service):
 
         return ArticleListOut(items = returnList)
 
+    @endpoints.method(message_types.VoidMessage, ArticleListOut,
+                      name='user.entireList',
+                      path='entire_list',
+                      http_method='POST')
+    def entire_list(selfs, request):
+        return ArticleListOut(items = parse_articles())
+
     @endpoints.method(UserIDAndArticles, ArticleListOut,
                       name='user.update',
                       path='update',
@@ -206,4 +268,18 @@ class HackerFeedApi(remote.Service):
 
         return ArticleListOut(items= returnList)
 
+    @endpoints.method(ArticlesForDB, Success,
+                      name='user.fillTheDB',
+                      path='FillDB',
+                      http_method='POST')
+    def fill_db(self, request):
+        # get UsersList entity and raise an exception if none found.
+        listOfArticlesString = request.theJson
+        listOfArticles = json.loads(listOfArticlesString)
+
+        populateArticleDB(listOfArticles)
+
+        return Success(didItWork="1")
+
 application = endpoints.api_server([HackerFeedApi])
+#insertToDB2()
