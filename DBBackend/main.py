@@ -243,9 +243,17 @@ class HackerFeedApi(remote.Service):
     def test(self, request):
         BASE_URL = 'https://news.ycombinator.com'
         url = '%s/%s' % (BASE_URL, '')
-        result = urlfetch.fetch(url, deadline=45, method=urlfetch.HEAD)
+        result = urlfetch.fetch(url, deadline=45, validate_certificate=True)
         #content = BeautifulSoup(result.content)
         return TestReturn(field=result.content)
 
+    @endpoints.method(message_types.VoidMessage, UserID,
+                      name='user.db',
+                      path='db',
+                      http_method='GET')
+    def testing(self, request):
+        populateArticleDB(10)
+        return UserID(id="1")
+
 application = endpoints.api_server([HackerFeedApi])
-populateArticleDB(100)
+#populateArticleDB(100)
