@@ -22,6 +22,7 @@ from google.appengine.api import urlfetch
 from bs4 import BeautifulSoup
 
 
+##### These four classes deal with the internal Datastore. They store information for the user as well as the Articles
 class ArticleRead(ndb.Model):
     id = ndb.StringProperty(required=True)
     userLiked = ndb.FloatProperty(required=True)
@@ -50,8 +51,10 @@ class ArticleDatabase(ndb.Model):
     time = ndb.StringProperty(required=True) #As in like 10 hours
     num_comments = ndb.IntegerProperty(required=True) #Number of comments
     rank = ndb.IntegerProperty(required=True) #Ranking
+######
 
 
+###### These six classes are representations for the incoming and outgoing results of the API
 class UserID(messages.Message):
     id = messages.StringField(1, required=True)
 
@@ -75,6 +78,10 @@ class TestReturn(messages.Message):
     field = messages.StringField(1, required=True)
 
 
+class StringReturn(messages.Message):
+    returnMessage = messages.StringField(1, required=True)
+
+
 class Articles(messages.Message):
     id = messages.StringField(1, required=True)
     userLiked = messages.FloatField(2, required=True)
@@ -85,35 +92,42 @@ class UserIDAndArticles(messages.Message):
     items = messages.MessageField(Articles, 2, repeated=True)
 
 
-class ArticleListOut(messages.Message):
+class ArticleListIn(messages.Message):
     items = messages.MessageField(ArticlesPush, 1, repeated=True)
 
-def populateArticleDB(value):
-    ArticleList = API_comm.get_top_articles(value)
+
+class ArticleListOut(messages.Message):
+    items = messages.MessageField(ArticlesPush, 1, repeated=True)
+######
+
+
+###### New method (derived from deprecated method below) that helps populate the DB by formatting information.
+def updateArticleDB(ArticleList):
     for elements in ArticleList:
-        articleQuery = ArticleDatabase.query(ArticleDatabase.id == elements['id']).get()
+        articleQuery = ArticleDatabase.query(ArticleDatabase.id == elements.id).get()
         if articleQuery is None:
-            e = ArticleDatabase(id = elements['id'],
-                                title= elements['title'],
-                                points= elements['points'],
-                                comments = elements['comments'],
-                                submitter = elements['submitter'],
-                                url = elements['url'],
-                                self_post = elements['self'],
-                                domain = elements['domain'],
-                                profile = elements['profile'],
-                                time = elements['time'],
-                                num_comments = elements['num_comments'],
-                                rank = elements['rank'])
+            e = ArticleDatabase(id = elements.id,
+                                title= elements.title,
+                                points= elements.points,
+                                comments = elements.comments,
+                                submitter = elements.submitter,
+                                url = elements.url,
+                                self_post = elements.self_post,
+                                domain = elements.domain,
+                                profile = elements.profile,
+                                time = elements.time,
+                                num_comments = elements.num_comments,
+                                rank = elements.rank)
             e.put()
         else:
-            articleQuery.time = elements['time'];
-            articleQuery.points = elements['points'];
-            articleQuery.num_comments = elements['num_comments'];
-            articleQuery.rank = elements['rank'];
+            articleQuery.time = elements.time
+            articleQuery.points = elements.points
+            articleQuery.num_comments = elements.num_comments
+            articleQuery.rank = elements.rank
             articleQuery.put()
 
 
+##### This method is used to get information from the Article DB (may have to be optimized later)
 def getArticleInformation(articleIDList):
     returnList = []
     for element in articleIDList:
@@ -133,8 +147,9 @@ def getArticleInformation(articleIDList):
         tempArticle.rank = articleInfo.rank
         returnList.append(tempArticle)
     return returnList
+#####
 
-
+##### Below are test, and now deprecated methods....
 #Just a test method so that I could test the dataStore retrieval
 def insertToDB2():
         list1 = [ArticleRead(id = '1', userLiked = .1), ArticleRead(id = '2', userLiked = .1)]
@@ -154,12 +169,14 @@ def insertToDB2():
 def defaultList():
     list1 = [ArticleList(id= '1'), ArticleList(id= '2')]
     return list1
+#####
 
 
 @endpoints.api(name='hackerFeed', version='v1',
                description='API for Hacker Feed Application')
 class HackerFeedApi(remote.Service):
 
+    #API call to get the most up-to-date articles for the user.
     @endpoints.method(UserID, ArticleListOut,
                       name='user.articlePush',
                       path='articlesPush',
@@ -176,6 +193,7 @@ class HackerFeedApi(remote.Service):
 
         return ArticleListOut(items = returnList)
 
+    #API call to get the information of the articles that the user has read (should not really be used). Problem is that the article information may no longer be in DB
     @endpoints.method(UserID, ArticleListOut,
                       name='user.articleRead',
                       path='articlesRead',
@@ -192,6 +210,7 @@ class HackerFeedApi(remote.Service):
 
         return ArticleListOut(items = returnList)
 
+    #API call to create a new user.
     @endpoints.method(UserID, ArticleListOut,
                       name='user.newUser',
                       path='new_user',
@@ -207,6 +226,8 @@ class HackerFeedApi(remote.Service):
 
         return ArticleListOut(items = returnList)
 
+
+    #API call used when user does an update (or application does an update).
     @endpoints.method(UserIDAndArticles, ArticleListOut,
                       name='user.update',
                       path='update',
@@ -218,6 +239,7 @@ class HackerFeedApi(remote.Service):
         if userlist is None:
             raise endpoints.NotFoundException('List for user ID %s not found' % uid)
 
+        #Add new articles to the Users entity
         list = userlist.ArticlesToRead
         for item in request.items:
             tempArticle = ArticleRead()
@@ -232,28 +254,20 @@ class HackerFeedApi(remote.Service):
         #query2 = UsersList.query(UsersList.UserID == userID) [this is in case that the OG query doesn't update]
 
         articlesToPush = userlist.ArticlesToPush
-
         returnList = getArticleInformation(articlesToPush)
-
         return ArticleListOut(items= returnList)
-    @endpoints.method(message_types.VoidMessage, TestReturn,
-                      name='user.test',
-                      path='test',
-                      http_method='GET')
-    def test(self, request):
-        BASE_URL = 'https://news.ycombinator.com'
-        url = '%s/%s' % (BASE_URL, '')
-        result = urlfetch.fetch(url, deadline=45, validate_certificate=True)
-        #content = BeautifulSoup(result.content)
-        return TestReturn(field=result.content)
 
-    @endpoints.method(message_types.VoidMessage, UserID,
-                      name='user.db',
-                      path='db',
-                      http_method='GET')
-    def testing(self, request):
-        populateArticleDB(10)
-        return UserID(id="1")
 
+    #API call used when user does an update (or application does an update).
+    @endpoints.method(ArticleListIn, StringReturn,
+                      name='user.updateDB',
+                      path='updateDB',
+                      http_method='POST')
+    def update_db(self, request):
+        updateArticleDB(request.items)
+        return StringReturn(returnMessage="Success")
+
+#Last line, to run API
 application = endpoints.api_server([HackerFeedApi])
+#insertToDB2()
 #populateArticleDB(100)
